@@ -114,13 +114,13 @@ function TweetCard({
 
     return (
         <li className="flex border-b gap-4 p-3">
-            <Link href={`/profile/${user.id}`}>
+            <Link href={`/profiles/${user.id}`}>
                 <ProfileImage src={user.image} />
             </Link>
             <div >
                 <div>
                     <Link
-                        href={`/profile/${user.id}`}
+                        href={`/profiles/${user.id}`}
                         className="font-bold hover:underline focus-visible:underline"
                     >
                         {user.name}
