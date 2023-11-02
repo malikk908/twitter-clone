@@ -13,18 +13,24 @@ export const tweetRouter = createTRPCRouter({
         limit: z.number().optional(),
         cursor: z.object({ id: z.string(), createdAt: z.date() }).optional(),
         onlyFollowing: z.boolean().optional(),
+        userId: z.string().optional()
       })
-    ).query(async ({ input: { limit = 7, cursor, onlyFollowing }, ctx }) => {
+    ).query(async ({ input: { limit = 7, cursor, onlyFollowing, userId }, ctx }) => {
       const currentUserId = ctx.session?.user.id
 
       const data = await ctx.db.tweet.findMany({
         take: limit + 1,
         cursor: cursor ? { createdAt_id: cursor } : undefined,
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-        where: currentUserId == null || !onlyFollowing ? undefined :
-          {
-            user: { followers: { some: { id: currentUserId } } }
-          },
+        where: currentUserId == null || !onlyFollowing ? undefined : (
+          userId ? {
+            userId
+          }
+            :
+            {
+              user: { followers: { some: { id: currentUserId } } }
+            }
+        ),
         select: {
           id: true,
           content: true,
