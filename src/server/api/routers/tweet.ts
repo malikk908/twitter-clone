@@ -22,11 +22,10 @@ export const tweetRouter = createTRPCRouter({
         take: limit + 1,
         cursor: cursor ? { createdAt_id: cursor } : undefined,
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-        where: currentUserId == null || !onlyFollowing ? undefined : (
-          userId ? {
-            userId
-          }
-            :
+        where:  userId ? {
+          userId
+        } : currentUserId == null || !onlyFollowing ? undefined : (         
+            
             {
               user: { followers: { some: { id: currentUserId } } }
             }

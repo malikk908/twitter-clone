@@ -7,6 +7,9 @@ import { VscArrowLeft } from "react-icons/vsc";
 import { ProfileImage } from "~/components/ProfileImage";
 import { Button } from "~/components/Button";
 import { InfiniteTweetList } from "~/components/InfiniteTweetList";
+import Link from "next/link";
+import { IconHoverEffect } from "~/components/IconHoverEffect";
+import { useSession } from "next-auth/react";
 
 
 const ProfilePage: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({ id }) => {
@@ -17,6 +20,12 @@ const ProfilePage: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
     { userId: id },
     { getNextPageParam: (lastPage) => lastPage.nextCursor }
   )
+
+  const toggleFollow = api.profile.toggleFollow.useMutation({
+    onSuccess: ({addedFollow}) => {
+
+    }
+  })
 
   if (profile == null) {
     return <ErrorPage statusCode={404} />;
@@ -30,7 +39,13 @@ const ProfilePage: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
         </title>
       </Head>
       <header className="flex gap-x-3 items-center px-4 py-2 sticky top-0 z-10 border-b bg-white pt-2">
-        <VscArrowLeft href=".." className="h-5 w-5" />
+        <Link href='..'>
+          <IconHoverEffect>
+            <VscArrowLeft href=".." className="h-5 w-5" />
+          </IconHoverEffect>
+
+        </Link>
+
         <ProfileImage src={profile.image} className="h-8 w-8" />
         <div className="flex-grow">
           <h1 className="font-bold text-lg">{profile.name}</h1>
@@ -42,9 +57,11 @@ const ProfilePage: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
             {profile.followsCount} Following
           </div>
         </div>
-        <Button small className="">
-          Follow
-        </Button>
+        <FollowButton 
+        userId={id}
+        isFollowing={profile.isFollowing}
+        onClick={() => toggleFollow.mutate({userId: id})} 
+        />
 
       </header>
       <main>
@@ -59,6 +76,30 @@ const ProfilePage: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
 
     </>
   )
+}
+
+function FollowButton({
+  userId,
+  isFollowing,
+  onClick,
+}: {
+  userId: string
+  isFollowing: boolean
+  onClick: () => void
+}) {
+  const session = useSession()
+
+  if(session.status !== "authenticated" || session.data.user.id === userId){
+    return null
+  }
+
+
+  return (
+   <Button small gray={isFollowing} onClick={onClick} >
+    {isFollowing ? "Unfollow" : "Follow"}
+  </Button>
+  )
+
 }
 
 const pluralRules = new Intl.PluralRules();
