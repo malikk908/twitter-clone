@@ -88,12 +88,15 @@ function TweetCard({
                             ...page,
                             tweets: page.tweets.map((tweet) => {
                                 if (tweet.id === id) {
+                                    console.log(tweet)
                                     return {
                                         ...tweet,
                                         likeCount: tweet.likeCount + countModifier,
                                         likedByMe: addedLike,
                                     };
+                                    
                                 }
+                                console.log(tweet)
 
                                 return tweet;
                             }),
@@ -103,6 +106,10 @@ function TweetCard({
             };
 
             trpcUtils.tweet.infiniteFeed.setInfiniteData({}, updateData);
+            trpcUtils.tweet.infiniteFeed.setInfiniteData({ onlyFollowing: true}, updateData);
+            trpcUtils.tweet.infiniteFeed.setInfiniteData({
+                userId: user.id
+            }, updateData);
 
         }
 

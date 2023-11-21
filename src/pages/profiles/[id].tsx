@@ -1,4 +1,4 @@
-import { GetStaticPaths, GetStaticPropsContext, InferGetStaticPropsType, NextPage } from "next";
+import { GetServerSidePropsContext, GetStaticPaths, GetStaticPropsContext, InferGetStaticPropsType, NextPage } from "next";
 import Head from "next/head";
 import { ssgHelper } from "~/server/api/ssgHelper";
 import { api } from "~/utils/api";
@@ -10,6 +10,7 @@ import { InfiniteTweetList } from "~/components/InfiniteTweetList";
 import Link from "next/link";
 import { IconHoverEffect } from "~/components/IconHoverEffect";
 import { useSession } from "next-auth/react";
+import { getServerSession } from "next-auth";
 
 
 const ProfilePage: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({ id }) => {
@@ -20,13 +21,13 @@ const ProfilePage: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
     { userId: id },
     { getNextPageParam: (lastPage) => lastPage.nextCursor }
   )
-  
+
   const trpcUtils = api.useUtils()
   const toggleFollow = api.profile.toggleFollow.useMutation({
-    onSuccess: ({addedFollow}) => {
-      trpcUtils.profile.getById.setData({id}, (oldData) => {
+    onSuccess: ({ addedFollow }) => {
+      trpcUtils.profile.getById.setData({ id }, (oldData) => {
         if (oldData == null) return
-        
+
         const countModifier = addedFollow ? 1 : -1
         return {
           ...oldData,
@@ -68,16 +69,17 @@ const ProfilePage: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
             {profile.followsCount} Following
           </div>
         </div>
-        <FollowButton 
-        userId={id}
-        isFollowing={profile.isFollowing}
-        isLoading={toggleFollow.isLoading}
-        onClick={() => toggleFollow.mutate({userId: id})} 
+        <FollowButton
+          userId={id}
+          isFollowing={profile.isFollowing}
+          isLoading={toggleFollow.isLoading}
+          onClick={() => toggleFollow.mutate({ userId: id })}
         />
 
       </header>
       <main>
         <InfiniteTweetList
+        key='profile'
           tweets={tweets.data?.pages.flatMap((page) => page.tweets)}
           isError={tweets.isError}
           isLoading={tweets.isLoading}
@@ -103,14 +105,14 @@ function FollowButton({
 }) {
   const session = useSession()
 
-  if(session.status !== "authenticated" || session.data.user.id === userId){
+  if (session.status !== "authenticated" || session.data.user.id === userId) {
     return null
   }
-  
+
   return (
-   <Button disabled={isLoading} small gray={isFollowing} onClick={onClick} >
-    {isFollowing ? "Unfollow" : "Follow"}
-  </Button>
+    <Button disabled={isLoading} small gray={isFollowing} onClick={onClick} >
+      {isFollowing ? "Unfollow" : "Follow"}
+    </Button>
   )
 
 }
@@ -130,7 +132,6 @@ export const getStaticPaths: GetStaticPaths = () => {
 };
 
 
-
 export async function getStaticProps(
   context: GetStaticPropsContext<{ id: string }>,
 ) {
@@ -146,13 +147,15 @@ export async function getStaticProps(
   }
 
   const ssg = ssgHelper()
+
   await ssg.profile.getById.prefetch({ id });
+
 
   return {
     props: {
       trpcState: ssg.dehydrate(),
       id,
-    },
+    }
   };
 }
 
