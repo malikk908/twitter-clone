@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { IconHoverEffect } from "./IconHoverEffect";
 import { api } from "~/utils/api";
 import { LoadingSpinner } from "./LoadingSpinner";
+import { useRouter } from "next/router";
 
 type Tweet = {
     id: string;
@@ -69,6 +70,9 @@ function TweetCard({
     likedByMe
 }: Tweet) {
 
+    const router = useRouter()
+
+
     const trpcUtils = api.useUtils();
 
     const toggleLike = api.tweet.toggleLike.useMutation({
@@ -88,7 +92,6 @@ function TweetCard({
                             ...page,
                             tweets: page.tweets.map((tweet) => {
                                 if (tweet.id === id) {
-                                    console.log(tweet)
                                     return {
                                         ...tweet,
                                         likeCount: tweet.likeCount + countModifier,
@@ -96,7 +99,6 @@ function TweetCard({
                                     };
                                     
                                 }
-                                console.log(tweet)
 
                                 return tweet;
                             }),
@@ -121,17 +123,28 @@ function TweetCard({
 
     return (
         <li className="flex border-b gap-4 p-3">
+            {router.asPath !== `/profiles/${user.id}` ? (
             <Link href={`/profiles/${user.id}`}>
                 <ProfileImage src={user.image} />
             </Link>
+            ) : (
+                <ProfileImage src={user.image} />
+            )}
+            
             <div >
                 <div>
-                    <Link
+                    {router.asPath !== `/profiles/${user.id}` ? (
+                        <Link
                         href={`/profiles/${user.id}`}
                         className="font-bold hover:underline focus-visible:underline"
                     >
                         {user.name}
                     </Link>
+                    ) : (
+                        <span className="font-bold hover:underline focus-visible:underline">
+                            {user.name}
+                        </span>
+                    )}                   
 
                 </div>
 
